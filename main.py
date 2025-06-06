@@ -1,6 +1,8 @@
+import pandas as pd
 from tkinter import *
 from tkinter import messagebox
 from tkinter.ttk import Treeview
+from tkinter import filedialog
 
 from tkcalendar import DateEntry
 from view import *
@@ -13,6 +15,7 @@ cor_azul = "#038cfc"
 cor_vermelha = "#ef5350"
 cor_verde_forte = "#263238"
 cor_azul_claro = "#e9edf5"
+cor_laranja = "#ffA500"
 
 janela = Tk()
 janela.geometry("1043x453")
@@ -190,15 +193,97 @@ def delete():
         messagebox.showerror("Selecione uma das linhas na tabela")
 
 
+def exportar():
+    dados = show_info()  
+    colunas = ['ID', 'Matéria', 'Assunto', 'Minutos', 'Data', 'Descrição']
+
+    df = pd.DataFrame(dados, columns=colunas)
+
+    caminho = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        filetypes=[("Planilha Excel", "*.xlsx")],
+        initialfile="registro_estudos.xlsx"
+    )
+
+    if caminho:
+        df.to_excel(caminho, index=False)
+        messagebox.showinfo("Exportado com sucesso", f"Arquivo salvo em:\n{caminho}")
+
+def abrir_estatisticas():
+    estat_janela = Toplevel()
+    estat_janela.title("Estatísticas de Estudo")
+    estat_janela.geometry("500x500")
+    estat_janela.configure(bg=cor_branca)
+
+    # Buscar dados do banco
+    dados = show_info()
+
+    if not dados:
+        messagebox.showinfo("Aviso", "Nenhum dado registrado ainda.")
+        estat_janela.destroy()
+        return
+
+    # Obter matérias únicas
+    materias = list(set([linha[1] for linha in dados]))
+
+    label_combo = Label(estat_janela, text="Escolha a matéria:", bg=cor_branca, font=("Ivy", 10, "bold"))
+    label_combo.pack(pady=10)
+
+    combo = Combobox(estat_janela, values=materias, state="readonly")
+    combo.pack(pady=5)
+
+    def gerar_grafico():
+        materia_escolhida = combo.get()
+        if not materia_escolhida:
+            messagebox.showerror("Erro", "Escolha uma matéria para gerar o gráfico.")
+            return
+
+        # Filtrar registros pela matéria e somar os minutos
+        total_minutos = {}
+        for linha in dados:
+            materia = linha[1]
+            minutos = int(linha[3])
+            if materia == materia_escolhida:
+                total_minutos[materia] = total_minutos.get(materia, 0) + minutos
+
+        # Gerar gráfico
+        fig, ax = plt.subplots(figsize=(4, 3))
+        materias = list(total_minutos.keys())
+        horas = [round(v / 60, 2) for v in total_minutos.values()]  # converter minutos em horas
+
+        ax.bar(materias, horas, color=cor_azul)
+        ax.set_ylabel("Horas Estudadas")
+        ax.set_title(f"Total de Horas - {materia_escolhida}")
+
+        # Exibir gráfico na janela Tkinter
+        canvas = FigureCanvasTkAgg(fig, master=estat_janela)
+        canvas.draw()
+        canvas.get_tk_widget().pack(pady=20)
+
+    botao_gerar = Button(estat_janela, text="Gerar Gráfico", command=gerar_grafico,
+                         bg=cor_verde_forte, fg=cor_branca, font="Ivy 10 bold")
+    botao_gerar.pack(pady=10)
+
+
 botao_inserir = Button(frame_esquerda_baixo, command=insert, text='Inserir', width=10, font='Ivy 9 bold',
                        bg=cor_azul, fg=cor_branca, relief='raised', overrelief='ridge')
 botao_inserir.place(x=15, y=280)
+
 botao_atualizar = Button(frame_esquerda_baixo, command=update, text='Atualizar', width=10, font='Ivy 9 bold',
                          bg=cor_verde_forte, fg=cor_branca, relief='raised', overrelief='ridge')
 botao_atualizar.place(x=105, y=280)
-botao_deletar = Button(frame_esquerda_baixo, command= delete, text='Deletar', width=10, font='Ivy 9 bold', bg=cor_vermelha,
-                       fg=cor_branca, relief='raised', overrelief='ridge')
+
+botao_deletar = Button(frame_esquerda_baixo, command= delete, text='Deletar', width=10, font='Ivy 9 bold', 
+                       bg=cor_vermelha, fg=cor_branca, relief='raised', overrelief='ridge')
 botao_deletar.place(x=195, y=280)
+
+botao_exportar = Button(frame_esquerda_baixo, command= exportar, text='Exportar', width=10, font='Ivy 9 bold', 
+                        bg=cor_verde, fg=cor_branca, relief='raised', overrelief='ridge')
+botao_exportar.place(x=60, y=320)
+
+botao_graficos = Button(frame_esquerda_baixo, command=abrir_estatisticas, text='Estatísticas', width=10, font='Ivy 9 bold', 
+                        bg=cor_laranja, fg=cor_branca, relief='raised', overrelief='ridge')
+botao_graficos.place(x=150, y=320)
 
 show()
 

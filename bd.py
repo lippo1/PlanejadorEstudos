@@ -8,6 +8,6 @@ with con:
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 "materia TEXT, "
                 "assunto TEXT, "
-                "minutos INTEGER,"
+                "minutos INTEGER, "
                 "data text, "
                 "descricao TEXT)")
