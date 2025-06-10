@@ -39,4 +39,3 @@ def delete_info(i):
         cur = con.cursor()
         query = "DELETE FROM anotacoes WHERE id = ?"
         cur.execute(query, i)
-
