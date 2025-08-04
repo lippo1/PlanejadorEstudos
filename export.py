@@ -14,14 +14,12 @@ class Exportador:
             df = pd.read_sql_query(query, conn)
             conn.close()
 
-            # Dialog para escolher onde salvar o arquivo Excel
             caminho = filedialog.asksaveasfilename(defaultextension=".xlsx",
                                                    filetypes=[("Arquivo Excel", "*.xlsx")])
-
-            if caminho:
-                df.to_excel(caminho, index=False)
-                messagebox.showinfo("Exportado", "Dados exportados com sucesso para Excel!")
-
+            if not caminho:
+                messagebox.showinfo("Cancelado", "Exportação cancelada.")
+                return
+            df.to_excel(caminho, index=False)
+            messagebox.showinfo("Exportado", "Dados exportados com sucesso para Excel!")
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao exportar: {str(e)}")
-
